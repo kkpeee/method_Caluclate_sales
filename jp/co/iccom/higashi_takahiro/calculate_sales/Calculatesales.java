@@ -14,27 +14,29 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Calculatesales {
+	
+	// 支店定義ファイルMap,商品定義ファイルMap
+	static HashMap<String, String> branchMap = new HashMap<String, String>();
+	static HashMap<String, String> commodityMap = new HashMap<String, String>();
+	// 売り上げMap(支店コード・商品コードをkey、金額をvalueに格納)
+	static HashMap<String, Long> branchRcdMap = new HashMap<String, Long>();
+	static HashMap<String, Long> commodityRcdMap = new HashMap<String, Long>();
+	
 	public static void main(String[]args) throws Exception{
 		if(args.length == 0 || args.length > 1  || !new File(args[0]).exists()) {
 			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}
-		// 支店定義ファイルMap,商品定義ファイルMap
-		HashMap<String, String> branchMap = new HashMap<String, String>();
-		HashMap<String, String> commodityMap = new HashMap<String, String>();
-		// 売り上げMap(支店コード・商品コードをkey、金額をvalueに格納)
-		HashMap<String, Long> branchRcdMap = new HashMap<String, Long>();
-		HashMap<String, Long> commodityRcdMap = new HashMap<String, Long>();
-			
+		
 		File branch = new File(args[0] + File.separator + "branch.lst");
 		File commodity = new File(args[0] + File.separator + "commodity.lst");
 			
 		//支店定義ファイル読み込み、フォーマットチェック、存在判定
-		if(!readTeigiFile("支店",branch,"^\\d{3}$",branchMap,branchRcdMap)){
+		if(!readDefinitionFile("支店",branch,"^\\d{3}$",branchMap,branchRcdMap)){
 			return;
 		}
 		//商品定義ファイル読み込み、フォーマットチェック、存在判定
-		if(!readTeigiFile("商品",commodity,"^\\w{8}$",commodityMap,commodityRcdMap)){
+		if(!readDefinitionFile("商品",commodity,"^\\w{8}$",commodityMap,commodityRcdMap)){
 			return;
 		}
 	
@@ -48,10 +50,10 @@ public class Calculatesales {
 		ArrayList<Integer> rcdNo = new ArrayList<Integer>();
 		
 		// 売上ファイル抽出
-		rcdChusyutu(rcdFolder,folderList,"^\\d{8}.rcd$",rcdNo);
+		earingsExtraction(rcdFolder,folderList,"^\\d{8}.rcd$",rcdNo);
 						
 		// 連番処理
-		if(!renban(rcdNo, folderList)){
+		if(!numberCheck(rcdNo, folderList)){
 			return;
 		}
 							
@@ -59,25 +61,25 @@ public class Calculatesales {
 		ArrayList<String> rcdEarings = new ArrayList<String>();
 		
 		for(int i = 0; i < rcdFolder.size(); i++) {
-			if(!readRcd(folder,rcdFolder.get(i), rcdEarings )){
+			if(!readRcd(folder, rcdFolder.get(i), rcdEarings )){
 				return;
 			}
 			String branchCode = rcdEarings.get(0);
 			String commodityCode = rcdEarings.get(1);
 			long amount = Long.parseLong(rcdEarings.get(2));
 			
-			if(!amountCheck ("支店", rcdFolder.get(i), amount,branchRcdMap, branchCode)){
+			if(!amountCheck ("支店", rcdFolder.get(i), amount, branchRcdMap, branchCode)){
 				return;
 			}
     		  
-			if(!amountCheck ("商品", rcdFolder.get(i), amount,commodityRcdMap, commodityCode)){
+			if(!amountCheck ("商品", rcdFolder.get(i), amount, commodityRcdMap, commodityCode)){
 				return;
 			}
 			rcdEarings = new ArrayList<String>();
 		}
 		
-		List<Map.Entry<String,Long>> sortBranch = sortRcd(branchRcdMap);
-		List<Map.Entry<String,Long>> sortCommodity = sortRcd(commodityRcdMap);
+		List<Map.Entry<String,Long>> sortBranch = earingsSort(branchRcdMap);
+		List<Map.Entry<String,Long>> sortCommodity = earingsSort(commodityRcdMap);
 
 		// 支店別集計ファイル作成
 		
@@ -94,8 +96,8 @@ public class Calculatesales {
 	}
 	
 	//「メソッド」定義ファイル読み込み、存在判定、フォーマットチェック
-	private static  boolean readTeigiFile(String definitionFile,File fileName,String format,
-			HashMap<String, String> definitionFileMap,HashMap<String, Long> definitionFileRcdMap) {
+	private static  boolean readDefinitionFile(String definition,File fileName,String format,
+			HashMap<String, String> definitionMap,HashMap<String, Long> definitionRcdMap) {
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(fileName));
@@ -103,14 +105,14 @@ public class Calculatesales {
 			while ((line = br.readLine()) != null) {
 				String[] words =line.split(",");
 				if (words.length != 2 || !words[0].matches(format)) {
-					System.out.println(definitionFile + "定義ファイルのフォーマットが不正です");
+					System.out.println(definition + "定義ファイルのフォーマットが不正です");
 					return false;
 				}
-				definitionFileMap.put(words[0],words[1]);// [0]支店コード　[1]支店名
-				definitionFileRcdMap.put(words[0],0L);
+				definitionMap.put(words[0],words[1]);// [0]支店コード　[1]支店名
+				definitionRcdMap.put(words[0],0L);
 			}
 		} catch (Exception e) {
-				System.out.println(definitionFile + "定義ファイルが存在しません");
+				System.out.println(definition + "定義ファイルが存在しません");
 				return false;
 		} finally {
 				try {
@@ -152,12 +154,12 @@ public class Calculatesales {
 	}
 
     //「メソッド」売上ファイル集計、コードエラー処理
-	private static  boolean amountCheck(String definitionFile, String fileName,long amount,
+	private static  boolean amountCheck(String definition, String fileName,long amount,
 			HashMap<String, Long> amountRcdMap, String code) {
 		
 		// 定義ファイル、コードエラー処理
 		if (!amountRcdMap.containsKey(code)) {
-			System.out.println(fileName + "の"+ definitionFile + "コードが不正です");
+			System.out.println(fileName + "の"+ definition + "コードが不正です");
 			return false;
 		}
 				
@@ -177,15 +179,15 @@ public class Calculatesales {
 
 //「メソッド」商品別集計ファイルの作成
 
-	private static boolean writeRcd(File fileName, List<Map.Entry<String, Long>> sortdefinitionFile, 
-			HashMap<String, String> branchOrCommdityMap){
+	private static boolean writeRcd(File fileName, List<Map.Entry<String, Long>> sortDefinition, 
+			HashMap<String, String> definitionMap){
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(fileName));
 			fileName.createNewFile();
 			
-			for (Entry<String, Long> e : sortdefinitionFile) {
-				bw.write(e.getKey() + "," + branchOrCommdityMap.get(e.getKey()) +","+ e.getValue());
+			for (Entry<String, Long> g : sortDefinition) {
+				bw.write(g.getKey() + "," + definitionMap.get(g.getKey()) +","+ g.getValue());
 				bw.newLine();
 			}
 		} catch (Exception e) {
@@ -204,21 +206,21 @@ public class Calculatesales {
 	}
 	
 //「メソッド」ソート降順
-	private static List<Entry<String,Long>> sortRcd(Map<String, Long> definitionFileRcdMap) {
-	List<Map.Entry<String, Long>> sortdefinitionFile 
-	= new ArrayList<Map.Entry<String,Long>>(definitionFileRcdMap.entrySet());
-	Collections.sort(sortdefinitionFile, new Comparator<Map.Entry<String,Long>>() {
+	private static List<Entry<String,Long>> earingsSort(Map<String, Long> definitionRcdMap) {
+	List<Map.Entry<String, Long>> sortDefinition 
+	= new ArrayList<Map.Entry<String,Long>>(definitionRcdMap.entrySet());
+	Collections.sort(sortDefinition, new Comparator<Map.Entry<String,Long>>() {
 		@Override
 		public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
 			return (entry2.getValue()).compareTo(entry1.getValue());
 		}
 	});
-	return sortdefinitionFile;
+	return sortDefinition;
 	}
 	
 
 	//「メソッド」連番処理
-	private static boolean renban(ArrayList<Integer> rcdNomber, File[] fileList){
+	private static boolean numberCheck(ArrayList<Integer> rcdNomber, File[] fileList){
 		for (int i = 0; i < rcdNomber.size(); i++ ) {
 			if(rcdNomber.get(i) != i + 1 || fileList[i].isDirectory()){
 				System.out.println("売上ファイル名が連番になっていません");
@@ -229,7 +231,7 @@ public class Calculatesales {
 	}
 
 	//「メソッド」売上抽出
-	static void rcdChusyutu(ArrayList<String> rcdFile, File[] fileName,String searchFormat,
+	static void earingsExtraction(ArrayList<String> rcdFile, File[] fileName,String searchFormat,
 			ArrayList<Integer> rcdNomber){
 		
 		// 売上ファイル抽出
