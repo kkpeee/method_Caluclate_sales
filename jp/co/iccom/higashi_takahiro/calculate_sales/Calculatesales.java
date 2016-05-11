@@ -25,7 +25,7 @@ public class Calculatesales {
 	
 	public static void main(String[]args) throws Exception{
 		
-		if(args.length == 0 || args.length > 1  || !new File(args[0]).exists()) {
+		if(args.length == 0 || args.length > 1 || !new File(args[0]).exists()) {
 			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}
@@ -34,12 +34,12 @@ public class Calculatesales {
 		File commodity = new File(args[0] + File.separator + "commodity.lst");
 			
 		//支店定義ファイル読み込み、フォーマットチェック、存在判定
-		if(!readDefinitionFile("支店", branch, "^\\d{3}$", branchMap, branchRcdMap)){
+		if (!readDefinitionFile("支店", branch, "^\\d{3}$", branchMap, branchRcdMap)){
 			return;
 		}
 		
 		//商品定義ファイル読み込み、フォーマットチェック、存在判定
-		if(!readDefinitionFile("商品", commodity, "^\\w{8}$", commodityMap, commodityRcdMap)){
+		if (!readDefinitionFile("商品", commodity, "^\\w{8}$", commodityMap, commodityRcdMap)){
 			return;
 		}
 	
@@ -56,16 +56,16 @@ public class Calculatesales {
 		earingsExtraction(rcdFolder, folderList, "^\\d{8}.rcd$", rcdNo);
 						
 		// 連番処理
-		if(!numberCheck(rcdNo, folderList)){
+		if (!numberCheck(rcdNo, folderList)) {
 			return;
 		}
 							
 		// 売り上げファイル読み込み
 		ArrayList<String> rcdEarings = new ArrayList<String>();
 		
-		for(int i = 0; i < rcdFolder.size(); i++) {
+		for (int i = 0; i < rcdFolder.size(); i++) {
 			
-			if(!readRcd(folder, rcdFolder.get(i), rcdEarings )){
+			if (!readRcd(folder, rcdFolder.get(i), rcdEarings )){
 				return;
 			}
 			
@@ -73,11 +73,11 @@ public class Calculatesales {
 			String commodityCode = rcdEarings.get(1);
 			long amount = Long.parseLong(rcdEarings.get(2));
 			
-			if(!amountCheck ("支店", rcdFolder.get(i), amount, branchRcdMap, branchCode)){
+			if (!amountCheck ("支店", rcdFolder.get(i), amount, branchRcdMap, branchCode)) {
 				return;
 			}
     		  
-			if(!amountCheck ("商品", rcdFolder.get(i), amount, commodityRcdMap, commodityCode)){
+			if (!amountCheck ("商品", rcdFolder.get(i), amount, commodityRcdMap, commodityCode)) {
 				return;
 			}
 			
@@ -92,20 +92,20 @@ public class Calculatesales {
 		List<Map.Entry<String,Long>> sortCommodity = earingsSort(commodityRcdMap);
 		
 		// 集計ファイルの出力
-		if(!writeRcd(branchout, sortBranch, branchMap)) {
+		if (!writeRcd(branchout, sortBranch, branchMap)) {
 			return;
 		}
 				
-		if(!writeRcd(commodityout, sortCommodity, commodityMap)) {
+		if (!writeRcd(commodityout, sortCommodity, commodityMap)) {
 			return;
 		}
 	}
 	
 	//「メソッド」定義ファイル読み込み、存在判定、フォーマットチェック
-	private static  boolean readDefinitionFile(String definition, File fileName,String format,
+	private static boolean readDefinitionFile(String definition, File fileName, String format,
 		HashMap<String, String> definitionMap, HashMap<String, Long> definitionRcdMap) {
 		
-		if(!fileName.exists()){
+		if (!fileName.exists()) {
 			System.out.println(definition + "定義ファイルが存在しません");
 			return false;
 		}
@@ -133,7 +133,7 @@ public class Calculatesales {
 				
 		} finally {
 				try {
-					if(br != null){
+					if (br != null){
 						br.close();
 					}
 					
@@ -152,7 +152,7 @@ public class Calculatesales {
 			br = new BufferedReader(new FileReader(folder + File.separator + fileName));
 			String readLine;
 			
-			while((readLine = br.readLine()) != null){
+			while ((readLine = br.readLine()) != null) {
 				rcdEarings.add(readLine); //get(0)001,get(1)SFT0001,get(2)10000
 			}	
 			
@@ -162,13 +162,13 @@ public class Calculatesales {
 				return false;
 			}
 			
-		}catch(Exception e){
+		} catch (Exception e) {
 			System.out.println("予期せぬエラーが発生しました");
 			return false;
 			
-		}finally{
+		} finally {
 			try {
-				if(br != null){
+				if(br != null) {
 					br.close();
 				}
 				
@@ -193,12 +193,12 @@ public class Calculatesales {
 		}
 				
 		// 定義ファイル別集計
-		if(amountRcdMap.get(code) != null) {
+		if (amountRcdMap.get(code) != null) {
 			long mount = amountRcdMap.get(code);
 			long newMount = mount + amount;
 			amountRcdMap.put(code,newMount);
 			
-			if(String.valueOf(newMount).length() > 10){
+			if (String.valueOf(newMount).length() > 10) {
 				System.out.println("合計金額が10桁を超えました");
 				return false;
 			}
@@ -210,7 +210,7 @@ public class Calculatesales {
 	//「メソッド」商品別集計ファイルの作成
 
 	private static boolean writeRcd(File fileName, List<Map.Entry<String, Long>> sortDefinition, 
-		HashMap<String, String> definitionMap){
+		HashMap<String, String> definitionMap) {
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(fileName));
@@ -227,7 +227,7 @@ public class Calculatesales {
 			
 		} finally {
 			try {
-				if(bw != null){
+				if(bw != null) {
 					bw.close();
 				}
 				
@@ -257,10 +257,10 @@ public class Calculatesales {
 	
 
 	//「メソッド」連番処理
-	private static boolean numberCheck(ArrayList<Integer> rcdNomber, File[] fileList){
+	private static boolean numberCheck(ArrayList<Integer> rcdNomber, File[] fileList) {
 		for (int i = 0; i < rcdNomber.size(); i++ ) {
 			
-			if(rcdNomber.get(i) != i + 1 || fileList[i].isDirectory()){
+			if (rcdNomber.get(i) != i + 1 || fileList[i].isDirectory()) {
 				System.out.println("売上ファイル名が連番になっていません");
 				return false;
 			}
@@ -270,7 +270,7 @@ public class Calculatesales {
 
 	//「メソッド」売上抽出
 	static void earingsExtraction(ArrayList<String> rcdFile, File[] fileName, String searchFormat,
-		ArrayList<Integer> rcdNomber){
+		ArrayList<Integer> rcdNomber) {
 		
 		// 売上ファイル抽出
 		for (File value : fileName) { 
@@ -278,7 +278,7 @@ public class Calculatesales {
 			
 			if (inputFile.getName().matches(searchFormat)) { // 数字8桁、rcdファイル検索
 				
-				if(inputFile.isFile()){
+				if (inputFile.isFile()) {
 					rcdFile.add(inputFile.getName());
 				}
 				
