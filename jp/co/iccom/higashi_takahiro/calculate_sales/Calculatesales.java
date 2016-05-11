@@ -98,6 +98,12 @@ public class Calculatesales {
 	//「メソッド」定義ファイル読み込み、存在判定、フォーマットチェック
 	private static  boolean readDefinitionFile(String definition,File fileName,String format,
 			HashMap<String, String> definitionMap,HashMap<String, Long> definitionRcdMap) {
+		
+		if(!fileName.exists()){
+			System.out.println(definition + "定義ファイルが存在しません");
+			return false;
+		}
+		
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(fileName));
@@ -112,7 +118,7 @@ public class Calculatesales {
 				definitionRcdMap.put(words[0],0L);
 			}
 		} catch (Exception e) {
-				System.out.println(definition + "定義ファイルが存在しません");
+				System.out.println("予期せぬエラーが発生しました");
 				return false;
 		} finally {
 				try {
