@@ -34,12 +34,12 @@ public class Calculatesales {
 		File commodity = new File(args[0] + File.separator + "commodity.lst");
 			
 		//支店定義ファイル読み込み、フォーマットチェック、存在判定
-		if(!readDefinitionFile("支店",branch,"^\\d{3}$",branchMap,branchRcdMap)){
+		if(!readDefinitionFile("支店", branch, "^\\d{3}$", branchMap, branchRcdMap)){
 			return;
 		}
 		
 		//商品定義ファイル読み込み、フォーマットチェック、存在判定
-		if(!readDefinitionFile("商品",commodity,"^\\w{8}$",commodityMap,commodityRcdMap)){
+		if(!readDefinitionFile("商品", commodity, "^\\w{8}$", commodityMap, commodityRcdMap)){
 			return;
 		}
 	
@@ -53,7 +53,7 @@ public class Calculatesales {
 		ArrayList<Integer> rcdNo = new ArrayList<Integer>();
 		
 		// 売上ファイル抽出
-		earingsExtraction(rcdFolder,folderList,"^\\d{8}.rcd$",rcdNo);
+		earingsExtraction(rcdFolder, folderList, "^\\d{8}.rcd$", rcdNo);
 						
 		// 連番処理
 		if(!numberCheck(rcdNo, folderList)){
@@ -102,8 +102,8 @@ public class Calculatesales {
 	}
 	
 	//「メソッド」定義ファイル読み込み、存在判定、フォーマットチェック
-	private static  boolean readDefinitionFile(String definition,File fileName,String format,
-		HashMap<String, String> definitionMap,HashMap<String, Long> definitionRcdMap) {
+	private static  boolean readDefinitionFile(String definition, File fileName,String format,
+		HashMap<String, String> definitionMap, HashMap<String, Long> definitionRcdMap) {
 		
 		if(!fileName.exists()){
 			System.out.println(definition + "定義ファイルが存在しません");
@@ -183,7 +183,7 @@ public class Calculatesales {
 	}
 
     //「メソッド」売上ファイル集計、コードエラー処理
-	private static  boolean amountCheck(String definition, String fileName,long amount,
+	private static  boolean amountCheck(String definition, String fileName, long amount,
 		HashMap<String, Long> amountRcdMap, String code) {
 		
 		// 定義ファイル、コードエラー処理
@@ -242,8 +242,8 @@ public class Calculatesales {
 	
 	//「メソッド」ソート降順
 	private static List<Entry<String,Long>> earingsSort(Map<String, Long> definitionRcdMap) {
-	List<Map.Entry<String, Long>> sortDefinition 
-	= new ArrayList<Map.Entry<String,Long>>(definitionRcdMap.entrySet());
+		List<Map.Entry<String, Long>> sortDefinition 
+		= new ArrayList<Map.Entry<String,Long>>(definitionRcdMap.entrySet());
 	
 		Collections.sort(sortDefinition, new Comparator<Map.Entry<String,Long>>() {
 		
@@ -269,7 +269,7 @@ public class Calculatesales {
 	}
 
 	//「メソッド」売上抽出
-	static void earingsExtraction(ArrayList<String> rcdFile, File[] fileName,String searchFormat,
+	static void earingsExtraction(ArrayList<String> rcdFile, File[] fileName, String searchFormat,
 		ArrayList<Integer> rcdNomber){
 		
 		// 売上ファイル抽出
